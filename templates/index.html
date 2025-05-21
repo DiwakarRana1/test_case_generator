@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLOUDSUFI QA Accelerator</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 200px);
+        }
+        .message {
+            max-width: 80%;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+            clear: both;
+        }
+        .user-message {
+            background-color: #e2e8f0;
+            margin-left: auto;
+            float: right;
+        }
+        .bot-message {
+            background-color: #f0f9ff;
+            margin-right: auto;
+            float: left;
+        }
+    </style>
+</head>
+<body class="bg-blue-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">CLOUDSUFI QA Accelerator</h1>
+
+        <div class="bg-white rounded-lg shadow-lg p-4 chat-container overflow-y-auto" id="chat-container">
+            <div class="message bot-message">
+                Please enter your feature description, code snippet, or URL to generate test cases.
+            </div>
+        </div>
+
+        <div class="mt-4 flex">
+            <input type="text" id="user-input"
+                   class="flex-1 p-2 border rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   placeholder="Enter your prompt here...">
+            <button onclick="sendMessage()"
+                    class="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                Send
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function addMessage(message, isUser) {
+            const chatContainer = document.getElementById('chat-container');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+
+            // Format message: line breaks and bold
+            const formattedMessage = message
+                .replace(/\n/g, '<br>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            messageDiv.innerHTML = formattedMessage;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const message = input.value.trim();
+
+            if (message) {
+                addMessage(message, true);
+                input.value = '';
+
+                try {
+                    const response = await fetch('/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ prompt: message }),
+                    });
+
+                    const data = await response.json();
+                    addMessage(data.response, false);
+                } catch (error) {
+                    addMessage('Sorry, there was an error processing your request.', false);
+                }
+            }
+        }
+
+        document.getElementById('user-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
